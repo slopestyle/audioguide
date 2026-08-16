@@ -1,0 +1,125 @@
+{
+  "_note": "Демонстрационные данные для разработки. Настоящий контент заливается через админку.",
+  "updatedAt": "2026-08-16T12:00:00Z",
+  "languages": ["ru", "en", "zh", "ar"],
+  "stands": [
+    {
+      "number": 1,
+      "photo": "media/placeholder.svg",
+      "content": {
+        "ru": {
+          "title": "Красная Поляна до курорта",
+          "text": "Демонстрационный текст. Здесь будет рассказ о том, какой была Красная Поляна до появления канатных дорог: горное село, дорога через перевал и первые исследователи Кавказа.",
+          "audio": "media/1/ru.mp3",
+          "duration": 35
+        },
+        "en": {
+          "title": "Krasnaya Polyana Before the Resort",
+          "text": "Sample text. The story of the mountain village before the first cable cars arrived.",
+          "audio": "media/1/en.mp3",
+          "duration": 32
+        },
+        "zh": {
+          "title": "度假区之前的红波利亚纳",
+          "text": "示例文本。索道出现之前的山村故事。",
+          "audio": "media/1/zh.mp3",
+          "duration": 30
+        },
+        "ar": {
+          "title": "كراسنايا بوليانا قبل المنتجع",
+          "text": "نص تجريبي. قصة القرية الجبلية قبل وصول التلفريك.",
+          "audio": "media/1/ar.mp3",
+          "duration": 33
+        }
+      }
+    },
+    {
+      "number": 2,
+      "photo": "media/placeholder.svg",
+      "content": {
+        "ru": {
+          "title": "Первые лыжники на склонах",
+          "text": "Демонстрационный текст о первых горнолыжниках Красной Поляны и самодельном снаряжении.",
+          "audio": "media/2/ru.mp3",
+          "duration": 28
+        },
+        "en": {
+          "title": "The First Skiers",
+          "text": "Sample text about the first skiers and their home-made equipment.",
+          "audio": "media/2/en.mp3",
+          "duration": 27
+        }
+      }
+    },
+    {
+      "number": 3,
+      "photo": "media/placeholder.svg",
+      "content": {
+        "ru": {
+          "title": "Бугельный подъёмник",
+          "text": "Демонстрационный текст о первом бугеле: как его строили и как он изменил катание в посёлке.",
+          "audio": "media/3/ru.mp3",
+          "duration": 30
+        },
+        "en": {
+          "title": "The Rope Tow",
+          "text": "Sample text. This stand has an English translation, but the recording is not ready yet — the app must handle that."
+        }
+      }
+    },
+    {
+      "number": 10,
+      "photo": "media/placeholder.svg",
+      "content": {
+        "ru": {
+          "title": "Олимпиада 2014 года",
+          "text": "Демонстрационный текст об Играх в Сочи и о том, что они оставили Красной Поляне.",
+          "audio": "media/10/ru.mp3",
+          "duration": 40
+        },
+        "zh": {
+          "title": "2014 年冬季奥运会",
+          "text": "示例文本。索契冬奥会为红波利亚纳留下了什么。",
+          "audio": "media/10/zh.mp3",
+          "duration": 38
+        }
+      }
+    },
+    {
+      "number": 11,
+      "photo": "media/placeholder.svg",
+      "content": {
+        "ru": {
+          "title": "Сноуборд приходит в горы",
+          "text": "Демонстрационный текст о появлении сноуборда в Красной Поляне.",
+          "audio": "media/11/ru.mp3",
+          "duration": 26
+        }
+      }
+    },
+    {
+      "number": 12,
+      "photo": "media/placeholder.svg",
+      "content": {
+        "ru": {
+          "title": "Ретро-снаряжение",
+          "text": "Демонстрационный текст о деревянных лыжах, кожаных ботинках и первых сноубордах из коллекции музея.",
+          "audio": "media/12/ru.mp3",
+          "duration": 31
+        },
+        "en": {
+          "title": "Vintage Gear",
+          "text": "Sample text about wooden skis, leather boots and early snowboards.",
+          "audio": "media/12/en.mp3",
+          "duration": 29
+        },
+        "ar": {
+          "title": "معدات قديمة",
+          "text": "نص تجريبي عن الزلاجات الخشبية والأحذية الجلدية.",
+          "audio": "media/12/ar.mp3",
+          "duration": 30
+        }
+      }
+    }
+  ]
+}

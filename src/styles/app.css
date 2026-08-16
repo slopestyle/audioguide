@@ -1,0 +1,363 @@
+/* Базовая вёрстка и компоненты.
+   Отступы — логические свойства (inline/block), иначе арабский RTL ломается. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: calc(100% * var(--text-scale));
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Арабская вязь при равном кегле читается мельче латиницы. */
+html[lang='ar'] {
+  font-size: calc(110% * var(--text-scale));
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+html[lang='ar'] body {
+  font-family: var(--font-arabic);
+}
+
+html[lang='zh'] body {
+  font-family: var(--font-cjk);
+}
+
+:where(button, a, input, select, summary):focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+:root[data-images='off'] img {
+  display: none;
+}
+
+/* ── Каркас страницы ─────────────────────────────────────────── */
+
+.page {
+  max-width: var(--page);
+  margin-inline: auto;
+  padding: var(--gap);
+  padding-block-end: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.title--xl {
+  font-size: 2rem;
+  text-transform: uppercase;
+}
+
+.title--lg {
+  font-size: 1.5rem;
+}
+
+.muted {
+  color: var(--ink-soft);
+}
+
+.center {
+  text-align: center;
+}
+
+/* ── Шапка ───────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--tap);
+}
+
+.header__title {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.header__number {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* ── Кнопки ──────────────────────────────────────────────────── */
+
+.btn {
+  min-height: var(--tap);
+  min-width: var(--tap);
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.0625rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+}
+
+.btn--block {
+  width: 100%;
+}
+
+.btn--icon {
+  padding: 0.5rem;
+}
+
+.btn--lang {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  justify-content: flex-start;
+  padding-inline: 1.25rem;
+}
+
+/* ── Клавиатура ──────────────────────────────────────────────── */
+
+.display {
+  font-family: var(--font-display);
+  font-size: 4.5rem;
+  line-height: 1;
+  text-align: center;
+  min-height: 5rem;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.display--empty {
+  color: var(--line);
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.625rem;
+}
+
+.key {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  min-height: 4.5rem;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.key--go {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.key:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── Стенд ───────────────────────────────────────────────────── */
+
+.photo {
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.player {
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.player__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.player__time {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+
+.seek {
+  width: 100%;
+  height: var(--tap);
+  accent-color: var(--accent);
+  background: transparent;
+  cursor: pointer;
+}
+
+.notice {
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  padding: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.transcript {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+/* ── Список стендов ──────────────────────────────────────────── */
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.list__link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: var(--tap);
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: inherit;
+  text-decoration: none;
+}
+
+.list__number {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+/* ── Панель настроек ─────────────────────────────────────────── */
+
+.settings {
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.settings fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.settings legend {
+  font-weight: 600;
+  padding: 0;
+  margin-block-end: 0.25rem;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3rem;
+  padding-inline: 0.25rem;
+  cursor: pointer;
+}
+
+.choice input {
+  width: 1.5rem;
+  height: 1.5rem;
+  accent-color: var(--accent);
+  flex: none;
+}
+
+.select {
+  min-height: var(--tap);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  padding-inline: 0.75rem;
+  cursor: pointer;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

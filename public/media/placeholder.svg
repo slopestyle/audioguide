@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Заглушка вместо фотографии экспоната">
+  <rect width="800" height="500" fill="#F1E9DD"/>
+  <path d="M0 380 L170 200 L250 290 L360 140 L520 340 L620 250 L800 400 L800 500 L0 500 Z" fill="#1C3B2E" opacity="0.85"/>
+  <path d="M360 140 L410 205 L360 215 L320 195 Z" fill="#F1E9DD" opacity="0.9"/>
+  <path d="M170 200 L205 245 L170 252 L145 238 Z" fill="#F1E9DD" opacity="0.9"/>
+  <circle cx="640" cy="110" r="42" fill="none" stroke="#8E1C24" stroke-width="6"/>
+  <text x="400" y="465" text-anchor="middle" font-family="sans-serif" font-size="28" fill="#F1E9DD">фото экспоната</text>
+</svg>
