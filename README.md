@@ -52,25 +52,88 @@ public/media/<номер>/    ru.mp3, en.mp3, zh.mp3, ar.mp3, фото
 (`server/`). Она же хранит GitHub-токен и делает коммиты — в браузер токен
 не попадает. Гостевая часть от неё не зависит.
 
-**Развёртывание:**
+### Развёртывание по шагам
+
+**1. GitHub-токен для функции.** github.com → Settings → Developer settings →
+Personal access tokens → **Fine-grained tokens** → Generate new token.
+Repository access: **Only select repositories** → `slopestyle/audioguide`.
+Permissions → Repository permissions → **Contents: Read and write** (больше
+ничего не нужно). Срок — год. Токен показывается один раз, скопируйте сразу.
+
+**2. Логины и пароли сотрудников.** По одной команде на человека:
 
 ```bash
-npm run server:hash ivanov "Иван Иванов"   # выдаст пароль и запись для USERS
-npm run server:build                       # соберёт dist-server/
+npm run server:hash ivanov "Иван Иванов"
 ```
 
-Дальше в консоли Yandex Cloud: создать функцию (Node.js 22), загрузить
-содержимое `dist-server/` архивом, точка входа — `index.handler`, вызов
-публичный. Переменные окружения:
+Команда печатает пароль (передайте его сотруднику) и готовую JSON-запись.
+Записи всех сотрудников собираются в один массив — это значение `USERS`:
+
+```json
+[{"login":"ivanov","name":"Иван Иванов","salt":"…","hash":"…"}]
+```
+
+**3. Секрет для подписи сессий:**
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+**4. Архив функции:**
+
+```bash
+npm run server:build
+Compress-Archive -Path dist-server\* -DestinationPath function.zip -Force
+```
+
+В архиве должны лежать файлы, а не папка `dist-server` — иначе точка входа
+не найдётся.
+
+**5. Аккаунт Yandex Cloud.** console.yandex.cloud → создать платёжный аккаунт
+(нужна карта; в пределах бесплатного тарифа списаний не будет — наш объём это
+сотни вызовов в месяц против бесплатного миллиона).
+
+**6. Функция.** Cloud Functions → Создать функцию → имя `audioguide-admin` →
+Создать версию:
+
+| Параметр | Значение |
+|---|---|
+| Среда выполнения | `nodejs22` (подойдёт и 18/20) |
+| Способ | Загрузить ZIP-архив → `function.zip` |
+| Точка входа | `index.handler` |
+| Таймаут | 30 секунд (публикация делает несколько запросов к GitHub) |
+| Память | 256 МБ |
+
+**7. Переменные окружения** (там же, при создании версии):
 
 | Переменная | Значение |
 |---|---|
-| `SESSION_SECRET` | случайная строка (например, `openssl rand -base64 32`) |
-| `USERS` | JSON-массив записей из `server:hash` |
-| `GITHUB_TOKEN` | fine-grained токен: только этот репозиторий, Contents: write |
+| `SESSION_SECRET` | строка из шага 3 |
+| `USERS` | JSON-массив из шага 2 |
+| `GITHUB_TOKEN` | токен из шага 1 |
 | `GITHUB_REPO` | `slopestyle/audioguide` |
 | `GITHUB_BRANCH` | `main` |
 | `ALLOWED_ORIGIN` | `https://slopestyle.github.io` |
+
+**8. Публичный вызов.** На вкладке «Обзор» включить **Публичная функция** и
+скопировать ссылку для вызова вида `https://functions.yandexcloud.net/<id>`.
+
+**9. Проверка до захода в админку:**
+
+```powershell
+Invoke-RestMethod -Method Post -ContentType "application/json" `
+  -Uri "https://functions.yandexcloud.net/<id>/login" `
+  -Body '{"login":"ivanov","password":"пароль из шага 2"}'
+```
+
+Ответ с полями `token` и `name` — всё работает. `500` — не заполнены
+переменные окружения, `401` — не тот пароль.
+
+**10. Вход.** Открыть админку, раскрыть «Адрес обработчика», вставить ссылку
+из шага 8, войти по логину и паролю.
+
+Смена пароля или новый сотрудник — шаг 2, правка `USERS` и новая версия функции.
+При переезде на свой домен поменять `ALLOWED_ORIGIN`.
 
 Локальная разработка админки — без облака:
 
