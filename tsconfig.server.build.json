@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.server.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "server",
+    "outDir": "dist-server",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "verbatimModuleSyntax": false,
+    "isolatedModules": false,
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": ["server/index.ts", "server/handler.ts", "server/auth.ts", "server/github.ts"]
+}
