@@ -1,6 +1,7 @@
 node_modules/
 dist/
 dist-server/
+function.zip
 .DS_Store
 *.local
 .vite/

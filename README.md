@@ -82,12 +82,11 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 **4. Архив функции:**
 
 ```bash
-npm run server:build
-Compress-Archive -Path dist-server\* -DestinationPath function.zip -Force
+npm run server:zip     # соберёт dist-server/ и упакует в function.zip
 ```
 
-В архиве должны лежать файлы, а не папка `dist-server` — иначе точка входа
-не найдётся.
+В архиве файлы лежат в корне, а не внутри папки `dist-server` — иначе точка
+входа не найдётся.
 
 **5. Аккаунт Yandex Cloud.** console.yandex.cloud → создать платёжный аккаунт
 (нужна карта; в пределах бесплатного тарифа списаний не будет — наш объём это
