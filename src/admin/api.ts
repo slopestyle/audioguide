@@ -11,20 +11,22 @@ export class ApiError extends Error {
   }
 }
 
-async function call<T>(path: string, init: RequestInit = {}, auth = true): Promise<T> {
+/** Действие передаётся полем `action`, а не путём: прямая ссылка на функцию
+ *  в Yandex Cloud подпути не принимает. */
+async function call<T>(action: string, payload: object = {}, auth = true): Promise<T> {
   if (!apiBase.value) {
     throw new ApiError('server', 'Не задан адрес обработчика админки');
   }
 
   let response: Response;
   try {
-    response = await fetch(apiBase.value + path, {
-      ...init,
+    response = await fetch(apiBase.value, {
+      method: 'POST',
       headers: {
         'content-type': 'application/json',
         ...(auth && session.value ? { authorization: `Bearer ${session.value.token}` } : {}),
-        ...init.headers,
       },
+      body: JSON.stringify({ action, ...payload }),
     });
   } catch {
     throw new ApiError('network', 'Нет связи с обработчиком');
@@ -43,22 +45,15 @@ async function call<T>(path: string, init: RequestInit = {}, auth = true): Promi
 }
 
 export function login(name: string, password: string): Promise<Session> {
-  return call<Session>(
-    '/login',
-    { method: 'POST', body: JSON.stringify({ login: name, password }) },
-    false,
-  );
+  return call<Session>('login', { login: name, password }, false);
 }
 
 export function fetchState(): Promise<{ headSha: string; date: string; name: string }> {
-  return call('/state');
+  return call('state');
 }
 
 export async function uploadBlob(base64: string): Promise<string> {
-  const result = await call<{ sha: string }>('/blob', {
-    method: 'POST',
-    body: JSON.stringify({ content: base64 }),
-  });
+  const result = await call<{ sha: string }>('blob', { content: base64 });
   return result.sha;
 }
 
@@ -72,9 +67,6 @@ export async function publish(
   message: string,
   changes: Change[],
 ): Promise<string> {
-  const result = await call<{ commitSha: string }>('/commit', {
-    method: 'POST',
-    body: JSON.stringify({ baseSha, message, changes }),
-  });
+  const result = await call<{ commitSha: string }>('commit', { baseSha, message, changes });
   return result.commitSha;
 }

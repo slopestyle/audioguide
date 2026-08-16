@@ -2,6 +2,7 @@ node_modules/
 dist/
 dist-server/
 function.zip
+function.zip.b64
 .DS_Store
 *.local
 .vite/

@@ -25,20 +25,18 @@ const env: Env = {
   ]),
 };
 
-function request(method: string, path: string, body?: unknown, token?: string): ApiRequest {
+/** Действие едет в теле: прямая ссылка на функцию подпути не принимает. */
+function call(action: string, payload: object = {}, token?: string): ApiRequest {
   return {
-    method,
-    path,
+    method: 'POST',
+    path: '/',
     headers: token ? { authorization: `Bearer ${token}` } : {},
-    body: body === undefined ? '' : JSON.stringify(body),
+    body: JSON.stringify({ action, ...payload }),
   };
 }
 
 async function signIn(): Promise<string> {
-  const response = await handle(
-    request('POST', '/login', { login: 'ivanov', password: 'пароль-музея' }),
-    env,
-  );
+  const response = await handle(call('login', { login: 'ivanov', password: 'пароль-музея' }), env);
   return (response.body as { token: string }).token;
 }
 
@@ -49,7 +47,7 @@ beforeEach(() => {
 describe('вход', () => {
   it('выдаёт сессию по верной паре', async () => {
     const response = await handle(
-      request('POST', '/login', { login: 'ivanov', password: 'пароль-музея' }),
+      call('login', { login: 'ivanov', password: 'пароль-музея' }),
       env,
     );
     expect(response.status).toBe(200);
@@ -57,12 +55,9 @@ describe('вход', () => {
   });
 
   it('отвечает одинаково на неверный пароль и несуществующий логин', async () => {
-    const wrongPassword = await handle(
-      request('POST', '/login', { login: 'ivanov', password: 'нет' }),
-      env,
-    );
+    const wrongPassword = await handle(call('login', { login: 'ivanov', password: 'нет' }), env);
     const wrongLogin = await handle(
-      request('POST', '/login', { login: 'petrov', password: 'пароль-музея' }),
+      call('login', { login: 'petrov', password: 'пароль-музея' }),
       env,
     );
     expect(wrongPassword.status).toBe(401);
@@ -72,46 +67,43 @@ describe('вход', () => {
 
 describe('защита методов', () => {
   it('не пускает без сессии', async () => {
-    for (const call of [
-      request('GET', '/state'),
-      request('POST', '/blob', { content: 'AAAA' }),
-      request('POST', '/commit', { baseSha: 'x', changes: [] }),
+    for (const request of [
+      call('state'),
+      call('blob', { content: 'AAAA' }),
+      call('commit', { baseSha: 'x', changes: [] }),
     ]) {
-      expect((await handle(call, env)).status).toBe(401);
+      expect((await handle(request, env)).status).toBe(401);
     }
     expect(github.createBlob).not.toHaveBeenCalled();
   });
 
   it('закрывает доступ сразу, как только сотрудника убрали из списка', async () => {
     const token = await signIn();
-    const withoutUser: Env = { ...env, USERS: '[]' };
 
-    expect((await handle(request('GET', '/state', undefined, token), env)).status).toBe(200);
-    expect((await handle(request('GET', '/state', undefined, token), withoutUser)).status).toBe(401);
+    expect((await handle(call('state', {}, token), env)).status).toBe(200);
+    expect((await handle(call('state', {}, token), { ...env, USERS: '[]' })).status).toBe(401);
   });
 
   it('не пускает с подделанным токеном', async () => {
-    const response = await handle(request('GET', '/state', undefined, 'подделка.подпись'), env);
-    expect(response.status).toBe(401);
+    expect((await handle(call('state', {}, 'подделка.подпись'), env)).status).toBe(401);
   });
 });
 
 describe('публикация', () => {
   it('отдаёт текущий коммит для проверки конфликтов', async () => {
-    const response = await handle(request('GET', '/state', undefined, await signIn()), env);
+    const response = await handle(call('state', {}, await signIn()), env);
     expect(response.status).toBe(200);
     expect((response.body as { headSha: string }).headSha).toBe('head-sha');
   });
 
   it('загружает файл и создаёт коммит от имени сотрудника', async () => {
     const token = await signIn();
-    const blob = await handle(request('POST', '/blob', { content: 'AAAA' }, token), env);
+    const blob = await handle(call('blob', { content: 'AAAA' }, token), env);
     expect((blob.body as { sha: string }).sha).toBe('blob-sha');
 
     const published = await handle(
-      request(
-        'POST',
-        '/commit',
+      call(
+        'commit',
         { baseSha: 'head-sha', message: 'Стенд 12', changes: [{ path: 'a', blobSha: 'blob-sha' }] },
         token,
       ),
@@ -124,7 +116,7 @@ describe('публикация', () => {
   it('отклоняет файл больше предела одного запроса', async () => {
     const token = await signIn();
     const oversized = 'A'.repeat(Math.ceil((MAX_FILE_BYTES * 4) / 3) + 8);
-    const response = await handle(request('POST', '/blob', { content: oversized }, token), env);
+    const response = await handle(call('blob', { content: oversized }, token), env);
     expect(response.status).toBe(413);
     expect(github.createBlob).not.toHaveBeenCalled();
   });
@@ -132,12 +124,7 @@ describe('публикация', () => {
   it('сообщает о чужой публикации вместо перезаписи', async () => {
     vi.mocked(github.commit).mockRejectedValueOnce(new GitHubError('Контент изменился', 409));
     const response = await handle(
-      request(
-        'POST',
-        '/commit',
-        { baseSha: 'старый', changes: [{ path: 'a', blobSha: 'b' }] },
-        await signIn(),
-      ),
+      call('commit', { baseSha: 'старый', changes: [{ path: 'a', blobSha: 'b' }] }, await signIn()),
       env,
     );
     expect(response.status).toBe(409);
@@ -145,22 +132,27 @@ describe('публикация', () => {
 });
 
 describe('служебное', () => {
-  it('отвечает на preflight и отдаёт заголовки CORS', async () => {
-    const response = await handle(request('OPTIONS', '/login'), env);
-    expect(response.status).toBe(204);
-    expect(response.headers['access-control-allow-origin']).toBe('https://slopestyle.github.io');
-  });
-
-  it('узнаёт маршрут и при вызове по прямой ссылке на функцию', async () => {
+  it('понимает и маршрут в пути — на случай работы через API Gateway', async () => {
     const response = await handle(
-      request('POST', '/d4e1abcdef23456789/login', { login: 'ivanov', password: 'пароль-музея' }),
+      {
+        method: 'POST',
+        path: '/login',
+        headers: {},
+        body: JSON.stringify({ login: 'ivanov', password: 'пароль-музея' }),
+      },
       env,
     );
     expect(response.status).toBe(200);
   });
 
+  it('отвечает на preflight и отдаёт заголовки CORS', async () => {
+    const response = await handle({ method: 'OPTIONS', path: '/', headers: {}, body: '' }, env);
+    expect(response.status).toBe(204);
+    expect(response.headers['access-control-allow-origin']).toBe('https://slopestyle.github.io');
+  });
+
   it('не притворяется работающим при незаполненных переменных', async () => {
-    const response = await handle(request('POST', '/login', { login: 'a', password: 'b' }), {});
+    const response = await handle(call('login', { login: 'a', password: 'b' }), {});
     expect(response.status).toBe(500);
   });
 });

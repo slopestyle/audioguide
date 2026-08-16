@@ -27,6 +27,16 @@ const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 /** Предел одного запроса к функции — 3.5 МБ; base64 раздувает файл в 1.33 раза. */
 export const MAX_FILE_BYTES = 2.5 * 1024 * 1024;
 
+export interface Payload {
+  action?: string;
+  login?: string;
+  password?: string;
+  content?: string;
+  baseSha?: string;
+  message?: string;
+  changes?: Change[];
+}
+
 export async function handle(request: ApiRequest, env: Env): Promise<ApiResponse> {
   const cors = corsHeaders(env);
 
@@ -34,9 +44,10 @@ export async function handle(request: ApiRequest, env: Env): Promise<ApiResponse
 
   try {
     const config = readConfig(env);
-    const route = `${request.method} ${normalize(request.path)}`;
+    const payload = parseBody<Payload>(request);
+    const route = payload.action ?? lastSegment(request.path);
 
-    if (route === 'POST /login') return { ...(await login(request, config)), headers: cors };
+    if (route === 'login') return { ...(await login(payload, config)), headers: cors };
 
     const session = verifySession(bearer(request), config.secret);
     // Логин сверяется со списком на каждом запросе: убрали сотрудника из USERS —
@@ -47,12 +58,12 @@ export async function handle(request: ApiRequest, env: Env): Promise<ApiResponse
     }
 
     switch (route) {
-      case 'GET /state':
+      case 'state':
         return { ...(await state(config.repo, session)), headers: cors };
-      case 'POST /blob':
-        return { ...(await blob(request, config.repo)), headers: cors };
-      case 'POST /commit':
-        return { ...(await publish(request, config.repo, session)), headers: cors };
+      case 'blob':
+        return { ...(await blob(payload, config.repo)), headers: cors };
+      case 'commit':
+        return { ...(await publish(payload, config.repo, session)), headers: cors };
       default:
         return { status: 404, body: { error: 'not_found' }, headers: cors };
     }
@@ -83,8 +94,8 @@ function readConfig(env: Env): Config {
   };
 }
 
-async function login(request: ApiRequest, config: Config): Promise<Omit<ApiResponse, 'headers'>> {
-  const { login: name, password } = parseBody<{ login?: string; password?: string }>(request);
+async function login(payload: Payload, config: Config): Promise<Omit<ApiResponse, 'headers'>> {
+  const { login: name, password } = payload;
   if (!name || !password) {
     return { status: 400, body: { error: 'bad_request' } };
   }
@@ -106,8 +117,8 @@ async function state(repo: Repo, session: SessionPayload): Promise<Omit<ApiRespo
   return { status: 200, body: { headSha: current.sha, date: current.date, name: session.name } };
 }
 
-async function blob(request: ApiRequest, repo: Repo): Promise<Omit<ApiResponse, 'headers'>> {
-  const { content } = parseBody<{ content?: string }>(request);
+async function blob(payload: Payload, repo: Repo): Promise<Omit<ApiResponse, 'headers'>> {
+  const { content } = payload;
   if (!content) return { status: 400, body: { error: 'bad_request' } };
 
   const bytes = Math.floor((content.length * 3) / 4);
@@ -119,11 +130,10 @@ async function blob(request: ApiRequest, repo: Repo): Promise<Omit<ApiResponse, 
 }
 
 async function publish(
-  request: ApiRequest,
+  payload: Payload,
   repo: Repo,
   session: SessionPayload,
 ): Promise<Omit<ApiResponse, 'headers'>> {
-  const payload = parseBody<{ baseSha?: string; message?: string; changes?: Change[] }>(request);
   if (!payload.baseSha || !Array.isArray(payload.changes) || payload.changes.length === 0) {
     return { status: 400, body: { error: 'bad_request' } };
   }
@@ -151,11 +161,12 @@ function bearer(request: ApiRequest): string | undefined {
   return header?.startsWith('Bearer ') ? header.slice(7) : undefined;
 }
 
-/** Через API Gateway путь приходит как «/login», а при вызове функции по прямой
- *  ссылке — как «/d4e.../login». Значение имеет только последний сегмент. */
-function normalize(path: string): string {
+/** Прямая ссылка на функцию не принимает подпути: «/<id>/login» она считает
+ *  испорченным идентификатором. Поэтому основной способ выбрать действие —
+ *  поле `action` в теле запроса, а путь читается только ради API Gateway. */
+function lastSegment(path: string): string {
   const segments = path.split('?')[0].split('/').filter(Boolean);
-  return segments.length > 0 ? `/${segments[segments.length - 1]}` : '/';
+  return segments.at(-1) ?? '';
 }
 
 /** Сессия ездит заголовком Authorization, а не cookie, поэтому CSRF невозможен
