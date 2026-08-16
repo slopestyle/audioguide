@@ -185,6 +185,8 @@ function describe(failure: unknown): string {
         return 'Нет связи с обработчиком.';
       case 'too_large':
         return 'Файл слишком большой: нужен mp3 не тяжелее 2.5 МБ.';
+      case 'forbidden':
+        return 'Обработчик отклонил запрос (403). Проверьте, что функция публичная и версия свежая.';
       default:
         return failure.message;
     }

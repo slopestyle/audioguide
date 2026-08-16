@@ -30,7 +30,7 @@ function call(action: string, payload: object = {}, token?: string): ApiRequest 
   return {
     method: 'POST',
     path: '/',
-    headers: token ? { authorization: `Bearer ${token}` } : {},
+    headers: token ? { 'x-session': token } : {},
     body: JSON.stringify({ action, ...payload }),
   };
 }
@@ -86,6 +86,20 @@ describe('защита методов', () => {
 
   it('не пускает с подделанным токеном', async () => {
     expect((await handle(call('state', {}, 'подделка.подпись'), env)).status).toBe(401);
+  });
+
+  it('принимает сессию и в Authorization — на случай работы через API Gateway', async () => {
+    const token = await signIn();
+    const response = await handle(
+      {
+        method: 'POST',
+        path: '/',
+        headers: { authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: 'state' }),
+      },
+      env,
+    );
+    expect(response.status).toBe(200);
   });
 });
 

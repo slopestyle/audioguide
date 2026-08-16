@@ -156,7 +156,13 @@ function parseBody<T>(request: ApiRequest): Partial<T> {
   }
 }
 
+/** Сессия ездит в X-Session, а не в Authorization: этот заголовок Yandex Cloud
+ *  считает своим и проверяет как IAM-токен функции, отвечая 403 на чужой.
+ *  Authorization остаётся запасным путём для API Gateway и локального сервера. */
 function bearer(request: ApiRequest): string | undefined {
+  const custom = request.headers['x-session'] ?? request.headers['X-Session'];
+  if (custom) return custom;
+
   const header = request.headers.authorization ?? request.headers.Authorization;
   return header?.startsWith('Bearer ') ? header.slice(7) : undefined;
 }
@@ -169,13 +175,13 @@ function lastSegment(path: string): string {
   return segments.at(-1) ?? '';
 }
 
-/** Сессия ездит заголовком Authorization, а не cookie, поэтому CSRF невозможен
+/** Сессия ездит заголовком, а не cookie, поэтому CSRF невозможен
  *  и достаточно разрешить один источник. */
 function corsHeaders(env: Env): Record<string, string> {
   return {
     'access-control-allow-origin': env.ALLOWED_ORIGIN ?? 'https://slopestyle.github.io',
     'access-control-allow-methods': 'GET, POST, OPTIONS',
-    'access-control-allow-headers': 'authorization, content-type',
+    'access-control-allow-headers': 'authorization, content-type, x-session',
     'access-control-max-age': '86400',
     'content-type': 'application/json; charset=utf-8',
   };

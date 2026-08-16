@@ -31,9 +31,10 @@ const text = await response.text();
 switch (response.status) {
   case 200: {
     const session = JSON.parse(text);
-    console.log('Всё работает.');
+    console.log('Вход работает.');
     console.log(`Сотрудник: ${session.name}`);
     console.log(`Сессия до: ${new Date(session.expiresAt).toLocaleString('ru-RU')}`);
+    await checkRepositoryAccess(endpoint, session.token);
     break;
   }
   case 401:
@@ -69,3 +70,34 @@ switch (response.status) {
 }
 
 console.log(`\nОтвет функции: ${text.slice(0, 400)}`);
+
+/** Второй шаг: убедиться, что функция достаёт репозиторий. Здесь вылезают
+ *  ошибки в GITHUB_TOKEN и GITHUB_REPO, которых вход не касается. */
+async function checkRepositoryAccess(endpoint, token) {
+  console.log('\nПроверяю доступ к репозиторию (action: state)…');
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-session': token },
+    body: JSON.stringify({ action: 'state' }),
+  });
+  const text = await response.text();
+
+  if (response.status === 200) {
+    const state = JSON.parse(text);
+    console.log(`Репозиторий доступен. Последний коммит: ${state.headSha.slice(0, 7)}`);
+    console.log(`Дата: ${new Date(state.date).toLocaleString('ru-RU')}`);
+    console.log('\nВсё готово — можно заходить в админку.');
+    return;
+  }
+
+  if (response.status === 403) {
+    console.log('403 от облака: функция непубличная либо залита старая версия кода.');
+  } else if (response.status === 502) {
+    console.log('Функция не смогла обратиться к GitHub.');
+    console.log('Проверьте GITHUB_TOKEN (права Contents: write) и GITHUB_REPO.');
+  } else {
+    console.log(`Неожиданный ответ ${response.status}.`);
+  }
+  console.log(`Ответ: ${text.slice(0, 300)}`);
+}

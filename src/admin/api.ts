@@ -1,6 +1,13 @@
 import { apiBase, endSession, session, type Session } from './session';
 
-export type ErrorKind = 'auth' | 'credentials' | 'conflict' | 'too_large' | 'network' | 'server';
+export type ErrorKind =
+  | 'auth'
+  | 'credentials'
+  | 'conflict'
+  | 'too_large'
+  | 'forbidden'
+  | 'network'
+  | 'server';
 
 export class ApiError extends Error {
   constructor(
@@ -24,7 +31,8 @@ async function call<T>(action: string, payload: object = {}, auth = true): Promi
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        ...(auth && session.value ? { authorization: `Bearer ${session.value.token}` } : {}),
+        // Не Authorization: его перехватывает Yandex Cloud и отвечает 403.
+        ...(auth && session.value ? { 'x-session': session.value.token } : {}),
       },
       body: JSON.stringify({ action, ...payload }),
     });
@@ -37,6 +45,9 @@ async function call<T>(action: string, payload: object = {}, auth = true): Promi
     if (auth) endSession();
     throw new ApiError(auth ? 'auth' : 'credentials', 'Требуется вход');
   }
+  // 403 приходит не от обработчика, а от самого облака — как правило,
+  // когда функция непубличная или залита старая версия.
+  if (response.status === 403) throw new ApiError('forbidden', 'Облако отклонило запрос');
   if (response.status === 409) throw new ApiError('conflict', 'Контент изменился');
   if (response.status === 413) throw new ApiError('too_large', 'Файл слишком большой');
   if (!response.ok) throw new ApiError('server', `Ошибка обработчика (${response.status})`);
