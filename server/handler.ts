@@ -39,7 +39,10 @@ export async function handle(request: ApiRequest, env: Env): Promise<ApiResponse
     if (route === 'POST /login') return { ...(await login(request, config)), headers: cors };
 
     const session = verifySession(bearer(request), config.secret);
-    if (!session) {
+    // Логин сверяется со списком на каждом запросе: убрали сотрудника из USERS —
+    // доступ закрылся сразу, а не через 12 часов, когда истечёт его сессия.
+    const known = session !== null && config.users.some((user) => user.login === session.login);
+    if (!session || !known) {
       return { status: 401, body: { error: 'unauthorized' }, headers: cors };
     }
 

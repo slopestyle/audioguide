@@ -82,6 +82,14 @@ describe('защита методов', () => {
     expect(github.createBlob).not.toHaveBeenCalled();
   });
 
+  it('закрывает доступ сразу, как только сотрудника убрали из списка', async () => {
+    const token = await signIn();
+    const withoutUser: Env = { ...env, USERS: '[]' };
+
+    expect((await handle(request('GET', '/state', undefined, token), env)).status).toBe(200);
+    expect((await handle(request('GET', '/state', undefined, token), withoutUser)).status).toBe(401);
+  });
+
   it('не пускает с подделанным токеном', async () => {
     const response = await handle(request('GET', '/state', undefined, 'подделка.подпись'), env);
     expect(response.status).toBe(401);
