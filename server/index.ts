@@ -7,7 +7,8 @@ interface YandexEvent {
   path?: string;
   url?: string;
   headers?: Record<string, string>;
-  body?: string;
+  /** Обычно строка, но при некоторых интеграциях приходит уже разобранный JSON. */
+  body?: string | Record<string, unknown>;
   isBase64Encoded?: boolean;
 }
 
@@ -16,9 +17,7 @@ export async function handler(event: YandexEvent) {
     method: event.httpMethod ?? 'GET',
     path: event.path ?? event.url ?? '/',
     headers: lowercaseKeys(event.headers ?? {}),
-    body: event.isBase64Encoded
-      ? Buffer.from(event.body ?? '', 'base64').toString('utf8')
-      : (event.body ?? ''),
+    body: readBody(event),
   };
 
   const response = await handle(request, process.env as Env);
@@ -29,6 +28,12 @@ export async function handler(event: YandexEvent) {
     body: response.body === null ? '' : JSON.stringify(response.body),
     isBase64Encoded: false,
   };
+}
+
+function readBody(event: YandexEvent): string {
+  if (event.body === undefined) return '';
+  if (typeof event.body !== 'string') return JSON.stringify(event.body);
+  return event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('utf8') : event.body;
 }
 
 function lowercaseKeys(headers: Record<string, string>): Record<string, string> {
