@@ -1,0 +1,131 @@
+/* Админка: рабочий инструмент за столом, не витрина.
+   Цвета и типографика — те же токены, что у гостя. */
+
+.page--wide {
+  max-width: 60rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-weight: 600;
+}
+
+.input {
+  min-height: 3rem;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+  width: 100%;
+}
+
+.input--narrow {
+  max-width: 8rem;
+}
+
+textarea.input {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.row--between {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.matrix-scroll {
+  overflow-x: auto;
+}
+
+.matrix {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.matrix th,
+.matrix td {
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.75rem;
+  text-align: start;
+}
+
+.matrix thead th {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.875rem;
+}
+
+.matrix tbody tr {
+  cursor: pointer;
+}
+
+.matrix tbody tr:hover {
+  background: var(--surface);
+}
+
+/* Состояние передаётся и цветом, и символом, и текстом для диктора —
+   на цвет полагаться нельзя. */
+.cell {
+  text-align: center;
+  font-size: 1.125rem;
+}
+
+.cell--ready {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.cell--text {
+  color: var(--accent);
+}
+
+.cell--empty {
+  color: var(--ink-soft);
+}
+
+.publish {
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  padding: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.editor-photo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.editor-photo img {
+  max-width: 16rem;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.preview {
+  width: 100%;
+}
+
+.btn--danger {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+label.btn {
+  cursor: pointer;
+}
