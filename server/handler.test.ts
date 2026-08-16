@@ -143,6 +143,14 @@ describe('служебное', () => {
     expect(response.headers['access-control-allow-origin']).toBe('https://slopestyle.github.io');
   });
 
+  it('узнаёт маршрут и при вызове по прямой ссылке на функцию', async () => {
+    const response = await handle(
+      request('POST', '/d4e1abcdef23456789/login', { login: 'ivanov', password: 'пароль-музея' }),
+      env,
+    );
+    expect(response.status).toBe(200);
+  });
+
   it('не притворяется работающим при незаполненных переменных', async () => {
     const response = await handle(request('POST', '/login', { login: 'a', password: 'b' }), {});
     expect(response.status).toBe(500);

@@ -148,9 +148,11 @@ function bearer(request: ApiRequest): string | undefined {
   return header?.startsWith('Bearer ') ? header.slice(7) : undefined;
 }
 
+/** Через API Gateway путь приходит как «/login», а при вызове функции по прямой
+ *  ссылке — как «/d4e.../login». Значение имеет только последний сегмент. */
 function normalize(path: string): string {
-  const withoutQuery = path.split('?')[0];
-  return withoutQuery.replace(/\/+$/, '') || '/';
+  const segments = path.split('?')[0].split('/').filter(Boolean);
+  return segments.length > 0 ? `/${segments[segments.length - 1]}` : '/';
 }
 
 /** Сессия ездит заголовком Authorization, а не cookie, поэтому CSRF невозможен
