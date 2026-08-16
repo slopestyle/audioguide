@@ -12,11 +12,12 @@
 npm run dev        # локальная разработка
 npm run build      # сборка статики в dist/
 npm run typecheck  # tsc --noEmit
-npm run lint       # eslint
-npm run test       # vitest (unit)
-npm run test:e2e   # playwright
-npm run test:a11y  # axe по ключевым экранам
+npm run lint       # oxlint
+npm test           # vitest: unit + DOM-сценарии (*.dom.test.tsx, happy-dom)
 ```
+
+Playwright и axe пока не подключены — сценарии проходов покрыты DOM-тестами
+`src/app/app.dom.test.tsx`. Доступность до появления axe проверяется вручную.
 
 Перед коммитом: `npm run typecheck && npm run test && npm run lint`.
 
@@ -49,7 +50,8 @@ npm run test:a11y  # axe по ключевым экранам
   режим без изображений. Настройки сохраняются между экранами и сессиями.
 - Семантический HTML, подписи ко всем интерактивным элементам, управляемый фокус.
 - Для `ar` — `dir="rtl"` и зеркальная раскладка.
-- Новый экран не считается готовым, пока не прошёл `npm run test:a11y`.
+- Новый экран не считается готовым, пока его не проверили экранным диктором
+  и в схеме «белым по чёрному» при размере текста A++.
 
 ## Стиль
 
