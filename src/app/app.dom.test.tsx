@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
-import guideFixture from '../../public/content.json' with { type: 'json' };
+import guideFixture from '../../fixtures/content.sample.json' with { type: 'json' };
 
 beforeAll(() => {
   // happy-dom не реализует воспроизведение — плееру достаточно заглушек.
